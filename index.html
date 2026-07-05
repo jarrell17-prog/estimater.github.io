@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Estimate Request</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="intro">
+    <p class="eyebrow">Estimate Request</p>
+    <h1>Let's spec out your project</h1>
+    <p>A few quick details and we'll send a written estimate within two business days.</p>
+  </div>
+
+  <form id="estimateForm" novalidate>
+
+    <section class="card" data-section="contact">
+      <div class="row2">
+        <div class="field">
+          <input type="text" id="name" name="name" placeholder="Name" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <input type="email" id="email" name="email" placeholder="Email" autocomplete="email" required>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" data-section="type">
+      <h2>Project type</h2>
+      <div class="field">
+        <div class="chips" id="typeChips" data-group="type" data-mode="multi">
+          <button type="button" class="chip" aria-pressed="false" data-value="Brand & logo">Brand &amp; logo</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="Print collateral">Print collateral</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="Web & digital">Web &amp; digital</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="Packaging">Packaging</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="Illustration">Illustration</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="Something else">Something else</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" data-section="scope">
+      <h2>What are we making?</h2>
+      <div class="field">
+        <textarea id="description" name="description" required placeholder="Briefly describe the project — deliverables, and any details that affect scope."></textarea>
+      </div>
+    </section>
+
+    <section class="card" data-section="logistics">
+      <h2>Budget range</h2>
+      <div class="field">
+        <div class="chips" data-group="budget" data-mode="single">
+          <button type="button" class="chip" aria-pressed="false" data-value="$500–$1,500">$500–$1,500</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="$1,500–$3,500">$1,500–$3,500</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="$3,500–$7,500">$3,500–$7,500</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="$7,500+">$7,500+</button>
+          <button type="button" class="chip" aria-pressed="false" data-value="Not sure yet">Not sure yet</button>
+        </div>
+      </div>
+    </section>
+
+    <div>
+      <p class="error-banner" id="errorBanner">Add your name, email, and a short project description so we know what we're quoting.</p>
+      <button type="submit" id="submitBtn">Send for estimate</button>
+      <p class="submit-note">No payment or commitment — this just gets you a written quote.</p>
+    </div>
+  </form>
+
+  <div class="stamp-screen" id="stampScreen">
+    <h2>Your spec is in.</h2>
+    <p>We'll review the details and send a written estimate to your email within two business days. Thanks for the brief.</p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // ---- chip groups ----
+  document.querySelectorAll('[data-group]').forEach(group=>{
+    const mode = group.dataset.mode;
+    group.addEventListener('click', (e)=>{
+      const chip = e.target.closest('.chip');
+      if(!chip) return;
+      if(mode==='single'){
+        group.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
+        chip.setAttribute('aria-pressed','true');
+      } else {
+        const pressed = chip.getAttribute('aria-pressed')==='true';
+        chip.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+      }
+    });
+  });
+
+  function getGroupValue(selector, mode){
+    const group = document.querySelector(selector);
+    const active = [...group.querySelectorAll('.chip[aria-pressed="true"]')].map(c=>c.dataset.value);
+    return mode==='single' ? (active[0]||'') : active;
+  }
+
+  // ---- submit handling ----
+  const form = document.getElementById('estimateForm');
+  const errorBanner = document.getElementById('errorBanner');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const name = document.getElementById('name');
+    const email = document.getElementById('email');
+    const description = document.getElementById('description');
+    let valid = true;
+
+    [name, email, description].forEach(f=>f.classList.remove('invalid'));
+
+    if(!name.value.trim()){ name.classList.add('invalid'); valid=false; }
+    if(!email.value.trim() || !email.value.includes('@')){ email.classList.add('invalid'); valid=false; }
+    if(!description.value.trim()){ description.classList.add('invalid'); valid=false; }
+
+    if(!valid){
+      errorBanner.classList.add('show');
+      form.querySelector('.invalid')?.focus();
+      return;
+    }
+    errorBanner.classList.remove('show');
+
+    const payload = {
+      name: name.value.trim(),
+      email: email.value.trim(),
+      projectTypes: getGroupValue('#typeChips', 'multi'),
+      description: description.value.trim(),
+      budget: getGroupValue('[data-group="budget"]', 'single'),
+      submittedAt: new Date().toISOString()
+    };
+
+    // ---------------------------------------------------------------
+    // CONNECT THIS FORM TO YOUR INBOX:
+    // This page has no backend, so submissions currently go nowhere
+    // but the browser console. Pick one:
+    //   1) Formspree / Basin / Getform — sign up, paste your endpoint
+    //      below, and change this to a real fetch() POST.
+    //   2) Netlify Forms — add a `data-netlify="true"` attribute to
+    //      the <form> tag and let Netlify handle the rest.
+    //   3) Your own backend — POST `payload` to your API route.
+    // ---------------------------------------------------------------
+    console.log('Estimate request payload:', payload);
+
+    form.style.display = 'none';
+    document.getElementById('stampScreen').classList.add('show');
+  });
+})();
+</script>
+
+</body>
+</html>
